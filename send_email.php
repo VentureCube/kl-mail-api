@@ -1,81 +1,146 @@
 <?php
-// Load PHPMailer (Install using Composer: composer require phpmailer/phpmailer)
+header("Access-Control-Allow-Origin: *");
+header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
+header("Access-Control-Allow-Headers: Content-Type");
+
 use PHPMailer\PHPMailer\PHPMailer;
 use PHPMailer\PHPMailer\Exception;
 
-// Include PHPMailer files
-require 'vendor/autoload.php';
+require 'PHPMailer/Exception.php';
+require 'PHPMailer/PHPMailer.php';
+require 'PHPMailer/SMTP.php';
 
-// Set response headers
 header("Content-Type: application/json");
 
-// Handle POST request
-if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+if ($_SERVER["REQUEST_METHOD"] == "POST") {
+    $input = json_decode(file_get_contents("php://input"), true);
+
+    // Extracting input fields from the contact form
+    $companyName = $input["company_name"] ?? '';
+    $yourName = $input["your_name"] ?? '';
+    $yourEmail = $input["your_email"] ?? '';
+    $phoneNumber = $input["phone_number"] ?? '';
+    $cargoInfo = $input["cargo_info"] ?? '';
+    $toAddress = "cs@kingdomlogistics.me"; // Replace with KL admin email
+    $ventureName = "Kingdom Logistics";
+    $logo = "https://www.kingdomlogistics.me/Assets/images/logo.png"; // Replace with KL logo URL
+    $bgColor = "#0068d2"; // KL branding color
+
+    $mail = new PHPMailer(true);
+    $thankYouMail = new PHPMailer(true);
+
     try {
-        // Get the JSON payload
-        $data = json_decode(file_get_contents('php://input'), true);
-
-        // Validate inputs
-        if (empty($data['company_name']) || empty($data['your_name']) || empty($data['your_email']) || empty($data['phone_number']) || empty($data['cargo_info'])) {
-            throw new Exception("All fields are required.");
-        }
-
-        // Validate email format
-        if (!filter_var($data['your_email'], FILTER_VALIDATE_EMAIL)) {
-            throw new Exception("Invalid email format.");
-        }
-
-        // Email details
-        $to = "cs@kingdomlogistics.me"; // Replace with your email address
-        $subject = "New Contact Form Submission - Kingdom Logistics";
-        $message = "
-            <html>
-            <head>
-            <title>New Contact Form Submission</title>
-            </head>
-            <body>
-            <h2>Contact Form Details</h2>
-            <p><strong>Company Name:</strong> {$data['company_name']}</p>
-            <p><strong>Your Name:</strong> {$data['your_name']}</p>
-            <p><strong>Your Email:</strong> {$data['your_email']}</p>
-            <p><strong>Phone Number:</strong> {$data['phone_number']}</p>
-            <p><strong>Cargo Information:</strong> {$data['cargo_info']}</p>
-            </body>
-            </html>
-        ";
-
-        // Initialize PHPMailer
-        $mail = new PHPMailer(true);
-
-        // SMTP configuration
+        // Server settings for SMTP
         $mail->isSMTP();
-        $mail->Host = 'smtp.gmail.com'; // SMTP server
+        $mail->Host = 'smtp.gmail.com';
         $mail->SMTPAuth = true;
-        $mail->Username = 'your-email@gmail.com'; // Replace with your Gmail address
-        $mail->Password = 'your-email-password'; // Replace with your Gmail password or App Password
+        $mail->Username = 'harish@venturecube.ai'; // Replace with your SMTP username
+        $mail->Password = 'harish@2711'; // Replace with your SMTP password
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port = 587;
 
-        // Email setup
-        $mail->setFrom('no-reply@kingdomlogistics.me', 'Kingdom Logistics'); // Static "From" address
-        $mail->addAddress($to); // Recipient email
-        $mail->addReplyTo($data['your_email'], $data['your_name']); // Reply-To
-        $mail->isHTML(true); // Send as HTML
-        $mail->Subject = $subject;
-        $mail->Body = $message;
+        $thankYouMail->isSMTP();
+        $thankYouMail->Host = 'smtp.gmail.com';
+        $thankYouMail->SMTPAuth = true;
+        $thankYouMail->Username = 'harish@venturecube.ai'; // Replace with your SMTP username
+        $thankYouMail->Password = 'harish@2711'; // Replace with your SMTP password
+        $thankYouMail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
+        $thankYouMail->Port = 587;
 
-        // Send email
-        if ($mail->send()) {
-            echo json_encode(["success" => true, "message" => "Email sent successfully."]);
-        } else {
-            throw new Exception("Email could not be sent. Mailer Error: " . $mail->ErrorInfo);
-        }
+        // Email for Admin (New Lead)
+        $mail->setFrom($yourEmail, $yourName);
+        $mail->addAddress($toAddress, "Kingdom Logistics Admin");
+        $mail->addReplyTo($yourEmail, $yourName);
+
+        $adminBody = "
+        <html>
+        <head>
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                .container { width: 100%; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9; }
+                .header { background-color: $bgColor; padding: 10px; border-radius: 5px 5px 0 0; text-align: center; color: #fff; }
+                .logo { text-align: center; margin: 20px 0; }
+                .logo img { max-width: 150px; height: auto; }
+                .content { padding: 20px; }
+                .footer { margin-top: 20px; text-align: center; font-size: 0.9em; color: #666; }
+                .details { margin-bottom: 10px; }
+                .details span { font-weight: bold; }
+            </style>
+        </head>
+        <body>
+        <div class='container'>
+            <div class='logo'><img src='$logo' alt='Logo'></div>
+            <div class='header'><h1>New Contact Lead</h1></div>
+            <div class='content'>
+                <p>You have received a new lead from the contact form. Below are the details:</p>
+                <div class='details'>
+                    <p><span>Company Name:</span> $companyName</p>
+                    <p><span>Name:</span> $yourName</p>
+                    <p><span>Email:</span> $yourEmail</p>
+                    <p><span>Phone Number:</span> $phoneNumber</p>
+                    <p><span>Cargo Info:</span> $cargoInfo</p>
+                </div>
+            </div>
+            <div class='footer'>This is an automated message. Please do not reply.</div>
+        </div>
+        </body>
+        </html>";
+
+        $mail->isHTML(true);
+        $mail->Subject = "New Contact Lead - Kingdom Logistics";
+        $mail->Body = $adminBody;
+
+        // Send Admin Email
+        $mail->send();
+
+        // Email for User (Thank You)
+        $thankYouMail->setFrom($toAddress, $ventureName);
+        $thankYouMail->addAddress($yourEmail, $yourName);
+
+        $userBody = "
+        <html>
+        <head>
+            <style>
+                body { font-family: Arial, sans-serif; line-height: 1.6; color: #333; }
+                .container { width: 100%; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #ddd; border-radius: 5px; background-color: #f9f9f9; }
+                .header { background-color: $bgColor; padding: 10px; border-radius: 5px 5px 0 0; text-align: center; color: #fff; }
+                .logo { text-align: center; margin: 20px 0; }
+                .logo img { max-width: 150px; height: auto; }
+                .content { padding: 20px; }
+                .footer { margin-top: 20px; text-align: center; font-size: 0.9em; color: #666; }
+            </style>
+        </head>
+        <body>
+        <div class='container'>
+            <div class='logo'><img src='$logo' alt='Logo'></div>
+            <div class='header'><h1>Thank You for Contacting Us</h1></div>
+            <div class='content'>
+                <p>Dear $yourName,</p>
+                <p>Thank you for reaching out to $ventureName. We have received your details and will get back to you shortly.</p>
+            </div>
+            <div class='footer'>Best regards, $ventureName Team</div>
+        </div>
+        </body>
+        </html>";
+
+        $thankYouMail->isHTML(true);
+        $thankYouMail->Subject = "Thank You for Contacting Kingdom Logistics";
+        $thankYouMail->Body = $userBody;
+
+        // Send Thank You Email
+        $thankYouMail->send();
+
+        echo json_encode(["success" => true, "message" => "Emails sent successfully."]);
     } catch (Exception $e) {
-        // Return error response
-        echo json_encode(["success" => false, "error" => $e->getMessage()]);
+        echo json_encode(["success" => false, "error" => "Message could not be sent. Mailer Error: {$mail->ErrorInfo}"]);
     }
+} elseif ($_SERVER["REQUEST_METHOD"] == "OPTIONS") {
+    // Handle preflight requests
+    header("Access-Control-Allow-Origin: *");
+    header("Access-Control-Allow-Methods: POST, GET, OPTIONS");
+    header("Access-Control-Allow-Headers: Content-Type");
+    exit(0);
 } else {
-    // Invalid request method
-    http_response_code(405);
-    echo json_encode(["success" => false, "error" => "Invalid request method."]);
+    echo json_encode(["success" => false, "error" => "Invalid request method"]);
 }
+?>
