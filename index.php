@@ -35,7 +35,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $mail->Host = 'smtp.gmail.com';
         $mail->SMTPAuth = true;
         $mail->Username = 'harish@venturecube.ai'; // Replace with your SMTP username
-        $mail->Password = 'harish@2711'; // Replace with your SMTP password
+        $mail->Password = 'abzb ixyv gdsr qikf'; // Replace with your SMTP password
         $mail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $mail->Port = 587;
 
@@ -43,7 +43,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         $thankYouMail->Host = 'smtp.gmail.com';
         $thankYouMail->SMTPAuth = true;
         $thankYouMail->Username = 'harish@venturecube.ai'; // Replace with your SMTP username
-        $thankYouMail->Password = 'harish@2711'; // Replace with your SMTP password
+        $thankYouMail->Password = 'abzb ixyv gdsr qikf'; // Replace with your SMTP password
         $thankYouMail->SMTPSecure = PHPMailer::ENCRYPTION_STARTTLS;
         $thankYouMail->Port = 587;
 
